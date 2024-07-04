@@ -2,8 +2,9 @@ package main
 
 import (
 	"context"
-	"github.com/daluzsi/go-message-broker/configuration/logger"
-	"github.com/daluzsi/go-message-broker/configuration/provider"
+	"github.com/daluzsi/go-message-broker/src/configuration/logger"
+	"github.com/daluzsi/go-message-broker/src/configuration/properties"
+	"github.com/daluzsi/go-message-broker/src/configuration/provider"
 	"os/signal"
 	"syscall"
 )
@@ -16,6 +17,9 @@ func main() {
 
 	// initialize provider config
 	provider.InitConfig(ctx)
+
+	// initialize properties
+	_ = properties.InitProperties()
 
 	// wait until receive shutdown signal
 	select {
