@@ -1,0 +1,7 @@
+aws:
+  is_local: true
+  region: us-east-1
+  iam:
+    role_arn: arn:aws:iam::000000000000:role/localstack-role
+  sqs:
+    queue_url: "https://localhost.localstack.cloud:4566/000000000000/my-queue"
