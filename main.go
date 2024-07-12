@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/daluzsi/go-message-broker/src/adapter/input"
 	"github.com/daluzsi/go-message-broker/src/configuration/logger"
 	"github.com/daluzsi/go-message-broker/src/configuration/properties"
 	"github.com/daluzsi/go-message-broker/src/configuration/provider"
@@ -15,11 +16,17 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	// initialize provider config
-	provider.InitConfig(ctx)
-
 	// initialize properties
-	_ = properties.InitProperties()
+	props := properties.InitProperties()
+
+	// initialize provider config
+	provider.InitConfig(ctx, *props)
+
+	// initialize sqs client
+	sqsAdp := input.NewSQS(provider.Config, *props)
+
+	// start polling
+	sqsAdp.StartPolling(ctx)
 
 	// wait until receive shutdown signal
 	select {
