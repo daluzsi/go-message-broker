@@ -8,25 +8,25 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials/stscreds"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/daluzsi/go-message-broker/src/configuration/logger"
+	"github.com/daluzsi/go-message-broker/src/configuration/properties"
 )
 
 var Config aws.Config
 
-const ROLENAME = "arn:aws:iam::000000000000:role/localstack-role"
-
 // InitConfig function used to initialize provider config with assume role
-func InitConfig(ctx context.Context) {
+func InitConfig(ctx context.Context, props properties.Properties) {
 	logger.Info("Initializing provider config", "InitConfig", logger.INIT)
+	defer ctx.Done()
 
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
-		panic(err)
+		logger.Error("Occurs an error during load aws credentials", err, "InitConfig", logger.DONE)
 	}
 
 	stsSvc := sts.NewFromConfig(cfg)
-	creds := stscreds.NewAssumeRoleProvider(stsSvc, ROLENAME)
-
+	creds := stscreds.NewAssumeRoleProvider(stsSvc, props.AWS.IAM.RoleArn)
 	cfg.Credentials = aws.NewCredentialsCache(creds)
+
 	Config = cfg
 
 	logger.Debug(fmt.Sprintf("Credentials loaded: %+v", cfg), "InitConfig", logger.PROGRESS)
