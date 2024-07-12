@@ -12,7 +12,14 @@ type Properties struct {
 }
 
 type AWS struct {
-	SQS SQS `yaml:"sqs"`
+	IAM      IAM    `yaml:"iam"`
+	SQS      SQS    `yaml:"sqs"`
+	Region   string `yaml:"region"`
+	Endpoint string `yaml:"endpoint"`
+	IsLocal  bool   `yaml:"is_local"`
+}
+type IAM struct {
+	RoleArn string `yaml:"role_arn"`
 }
 
 type SQS struct {
@@ -21,21 +28,20 @@ type SQS struct {
 
 func InitProperties() *Properties {
 	logger.Info("Initializing properties", "InitProperties", logger.INIT)
+	p := &Properties{}
 
 	buf, err := os.ReadFile("application-properties.yaml")
 
 	if err != nil {
 		logger.Error("Occurs an error during read file", err, "InitProperties", logger.DONE)
-		return nil
+		return p
 	}
-
-	p := &Properties{}
 
 	err = yaml.Unmarshal(buf, p)
 
 	if err != nil {
 		logger.Error("Occurs an error during yaml unmarshal", err, "InitProperties", logger.DONE)
-		return nil
+		return p
 	}
 
 	logger.Debug(fmt.Sprintf("Properties loaded: %+v", p), "InitProperties", logger.PROGRESS)
