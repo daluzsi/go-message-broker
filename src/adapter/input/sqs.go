@@ -31,7 +31,8 @@ func NewSQS(config aws.Config, props properties.Properties) *SQS {
 	}
 }
 
-func (s *SQS) StartPolling(ctx context.Context) {
+func (s *SQS) StartPolling(ctx context.Context, done chan bool) {
+	defer close(done)
 	logger.Info("Starting polling...", "StartPolling", logger.INIT)
 
 	for {
@@ -45,7 +46,8 @@ func (s *SQS) StartPolling(ctx context.Context) {
 			})
 
 			if err != nil {
-				logger.Error("Occurs an error during polling messages", err, "ListenMessages", logger.DONE)
+				logger.Error("Occurs an error during polling messages", err, "StartPolling", logger.DONE)
+				return
 			}
 
 			if len(resOtp.Messages) == 0 {
@@ -63,16 +65,31 @@ func (s *SQS) processMessage(ctx context.Context, messages []types.Message) {
 
 	for _, msg := range messages {
 		go func(msg *types.Message) {
+			if !s.QueueExists(ctx) {
+				logger.Fatal(fmt.Sprintf("Queue %s not exists", &s.props.AWS.SQS.QueueUrl), nil, "processMessage", logger.DONE)
+				return
+			}
+
 			if _, err := s.client.DeleteMessage(ctx, &sqs.DeleteMessageInput{
 				ReceiptHandle: msg.ReceiptHandle,
 				QueueUrl:      &s.props.AWS.SQS.QueueUrl,
 			}); err != nil {
-				logger.Error("Occurs an error during message deletion", err, "ListenMessages", logger.DONE)
+				logger.Error("Occurs an error during message deletion", err, "processMessage", logger.DONE)
 			} else {
-				logger.Info(fmt.Sprintf("Message: %+v", *msg.Body), "ListenMessages", logger.PROGRESS)
+				logger.Info(fmt.Sprintf("Message: %+v", *msg.Body), "processMessage", logger.PROGRESS)
 			}
 		}(&msg)
 	}
 
 	wg.Wait()
+}
+
+func (s *SQS) QueueExists(ctx context.Context) bool {
+	logger.Info("Checking queue exists...", "QueueExists", logger.INIT)
+
+	_, err := s.client.GetQueueAttributes(ctx, &sqs.GetQueueAttributesInput{
+		QueueUrl: aws.String(s.props.AWS.SQS.QueueUrl),
+	})
+
+	return err == nil
 }
