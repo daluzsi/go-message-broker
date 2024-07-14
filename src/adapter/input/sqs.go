@@ -41,32 +41,42 @@ func (s *SQS) StartPolling(ctx context.Context, done chan bool) {
 			logger.Info("Stopping polling...", "StartPolling", logger.DONE)
 			return
 		default:
-			resOtp, err := s.client.ReceiveMessage(ctx, &sqs.ReceiveMessageInput{
-				QueueUrl: &s.props.AWS.SQS.QueueUrl,
-			})
+			func() {
+				defer func() {
+					if r := recover(); r != nil {
+						logger.Warn("Recovering application after a panic", nil, "StartPolling", logger.PROGRESS)
+						return
+					}
+				}()
 
-			if err != nil {
-				logger.Error("Occurs an error during polling messages", err, "StartPolling", logger.DONE)
-				return
-			}
+				resOtp, err := s.client.ReceiveMessage(ctx, &sqs.ReceiveMessageInput{
+					QueueUrl: &s.props.AWS.SQS.QueueUrl,
+				})
 
-			if len(resOtp.Messages) == 0 {
-				continue
-			}
+				if err != nil {
+					logger.Error("Occurs an error during polling messages", err, "StartPolling", logger.DONE)
+					return
+				}
 
-			s.processMessage(ctx, resOtp.Messages)
+				if len(resOtp.Messages) == 0 {
+					return
+				}
+
+				go s.processMessage(ctx, resOtp.Messages)
+			}()
 		}
 	}
 }
 
 func (s *SQS) processMessage(ctx context.Context, messages []types.Message) {
+	logger.Debug("Processing messages...", "processMessage", logger.INIT)
 	wg := sync.WaitGroup{}
 	wg.Add(len(messages))
 
 	for _, msg := range messages {
 		go func(msg *types.Message) {
 			if !s.QueueExists(ctx) {
-				logger.Fatal(fmt.Sprintf("Queue %s not exists", &s.props.AWS.SQS.QueueUrl), nil, "processMessage", logger.DONE)
+				logger.Error(fmt.Sprintf("Queue %s not exists", s.props.AWS.SQS.QueueUrl), nil, "processMessage", logger.DONE)
 				return
 			}
 
@@ -82,10 +92,12 @@ func (s *SQS) processMessage(ctx context.Context, messages []types.Message) {
 	}
 
 	wg.Wait()
+
+	logger.Debug("No more messages...", "processMessage", logger.DONE)
 }
 
 func (s *SQS) QueueExists(ctx context.Context) bool {
-	logger.Info("Checking queue exists...", "QueueExists", logger.INIT)
+	logger.Debug("Checking queue exists...", "QueueExists", logger.INIT)
 
 	_, err := s.client.GetQueueAttributes(ctx, &sqs.GetQueueAttributesInput{
 		QueueUrl: aws.String(s.props.AWS.SQS.QueueUrl),
