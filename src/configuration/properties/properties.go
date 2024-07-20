@@ -23,7 +23,8 @@ type IAM struct {
 }
 
 type SQS struct {
-	QueueUrl string `yaml:"queue_url"`
+	QueuesUrl []string `yaml:"queues_url"`
+	Endpoint  string   `yaml:"endpoint"`
 }
 
 func InitProperties() *Properties {
