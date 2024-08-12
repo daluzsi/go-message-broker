@@ -33,10 +33,12 @@ func main() {
 	done := make(chan bool, 1)
 
 	for _, queue := range props.AWS.SQS.QueuesUrl {
-		if !sqsAdp.QueueExists(ctx, queue) {
-			logger.Error(fmt.Sprintf("Queue %s not exists", queue), nil, "main", logger.DONE)
-			close(done)
-		}
+		go func(queue string) {
+			if !sqsAdp.QueueExists(ctx, queue) {
+				logger.Error(fmt.Sprintf("Queue %s not exists", queue), nil, "main", logger.DONE)
+				close(done)
+			}
+		}(queue)
 	}
 
 	// start polling
