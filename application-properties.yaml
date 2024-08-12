@@ -4,9 +4,9 @@ aws:
   iam:
     role_arn: arn:aws:iam::000000000000:role/localstack-role
   sqs:
-    endpoint: "https://localhost.localstack.cloud:4566"
+    endpoint: http://localstack:4566
     queues_url:
-      - https://localhost.localstack.cloud:4566/000000000000/my-queue-payment
-      - https://localhost.localstack.cloud:4566/000000000000/my-queue-invoice
-      - https://localhost.localstack.cloud:4566/000000000000/my-queue-deposit
-      - https://localhost.localstack.cloud:4566/000000000000/my-queue-withdrawal
+      - http://localstack:4566/000000000000/my-queue-payment
+      - http://localstack:4566/000000000000/my-queue-invoice
+      - http://localstack:4566/000000000000/my-queue-deposit
+      - http://localstack:4566/000000000000/my-queue-withdrawal
