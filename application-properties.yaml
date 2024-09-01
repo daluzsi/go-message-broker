@@ -1,0 +1,12 @@
+aws:
+  is_local: true
+  region: us-east-1
+  iam:
+    role_arn: arn:aws:iam::000000000000:role/localstack-role
+  sqs:
+    endpoint: http://localstack:4566
+    queues_url:
+      - http://localstack:4566/000000000000/my-queue-payment
+      - http://localstack:4566/000000000000/my-queue-invoice
+      - http://localstack:4566/000000000000/my-queue-deposit
+      - http://localstack:4566/000000000000/my-queue-withdrawal

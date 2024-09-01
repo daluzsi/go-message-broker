@@ -29,13 +29,12 @@
         --role-name localstack-role \
         --assume-role-policy-document '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":"arn:aws:iam::000000000000:root"},"Action":"sts:AssumeRole"}]}'
     ```
+4. Attach the policy to the IAM role
 
-4. Configure AWS CLI to use Localstack:
-
-    ```sh
-    aws configure set aws_access_key_id test --profile localstack
-    aws configure set aws_secret_access_key test --profile localstack
-    aws configure set region us-east-1 --profile localstack
+   ```sh
+    awslocal iam attach-role-policy \
+    --role-name localstack-role \
+    --policy-arn arn:aws:iam::aws:policy/AdministratorAccess
     ```
 
 5. Create an SQS queue in Localstack:
@@ -53,20 +52,10 @@
     cd go-message-broker
     ```
 
-2. Set the environment variables:
+2. Install dependencies:
 
     ```sh
-    export AWS_REGION=us-east-1
-    export AWS_ENDPOINT=http://localhost:4566
-    export QUEUE_URL=http://localhost:4566/000000000000/my-queue
-    export AWS_ROLE_ARN=arn:aws:iam::000000000000:role/localstack-role
-    export AWS_ROLE_SESSION_NAME=session-name
-    ```
-
-3. Install dependencies:
-
-    ```sh
-    go mod tidy
+   go mod tidy
     ```
 
 ## Usage

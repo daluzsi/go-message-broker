@@ -1,0 +1,21 @@
+services:
+  localstack:
+    image: localstack/localstack
+    container_name: localstack
+    ports:
+      - "4566:4566"
+    networks:
+      - my_shared_network
+    environment:
+      - SERVICES=sqs,iam
+    volumes:
+      - ./localstack:/etc/localstack
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+networks:
+  my_shared_network:
+    external: true
